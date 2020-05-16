@@ -93,7 +93,32 @@ PHP_METHOD(PSEM,__construct)
 }
 /* }}} */
 
-/* {{{ bool Uring::unlink(  )
+/* {{{ array PSEM::info(  )
+ */
+PHP_METHOD(PSEM,info)
+{
+     php_psem_obj *psemobj;
+     int retval,sval;
+
+     ZEND_PARSE_PARAMETERS_NONE();
+
+     psemobj = Z_PHPPSEM_P(getThis());
+
+     retval = sem_getvalue(psemobj->semaphore,&sval);
+     if (retval == -1)
+     {
+
+        zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+
+     }
+
+     array_init (return_value);
+     add_assoc_long (return_value, "value", sval);
+
+}
+/* }}}*/
+
+/* {{{ bool PSEM::unlink(  )
  */
 PHP_METHOD(PSEM,unlink)
 {
@@ -149,6 +174,9 @@ ZEND_BEGIN_ARG_INFO(arginfo_psem_class_construct, 0)
 	ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO(arginfo_psem_class_info, 0)
+ZEND_END_ARG_INFO()
+
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_unlink, 0)
 ZEND_END_ARG_INFO()
 /* }}} */
@@ -165,6 +193,7 @@ static const zend_function_entry psem_functions[] = {
  */
 static const zend_function_entry psem_methods[] = {
 	PHP_ME(PSEM, __construct,	arginfo_psem_class_construct, ZEND_ACC_PUBLIC)
+	PHP_ME(PSEM, info,      arginfo_psem_class_info, ZEND_ACC_PUBLIC)
 	PHP_ME(PSEM, unlink,    arginfo_psem_class_unlink, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };

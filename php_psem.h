@@ -14,6 +14,7 @@ ZEND_TSRMLS_CACHE_EXTERN()
 
 PHP_FUNCTION(psem_info);
 PHP_METHOD(PSEM, __construct);
+PHP_METHOD(PSEM, info);
 PHP_METHOD(PSEM, unlink);
 
 PHP_RINIT_FUNCTION(psem);
