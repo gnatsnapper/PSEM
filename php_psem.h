@@ -18,6 +18,7 @@ PHP_METHOD(PSEM, info);
 PHP_METHOD(PSEM, wait);
 PHP_METHOD(PSEM, trywait);
 PHP_METHOD(PSEM, post);
+PHP_METHOD(PSEM, close);
 PHP_METHOD(PSEM, unlink);
 
 PHP_RINIT_FUNCTION(psem);

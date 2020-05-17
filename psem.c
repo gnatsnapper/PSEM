@@ -68,23 +68,36 @@ PHP_FUNCTION(psem_info)
 }
 /* }}}*/
 
-/* {{{ void psem___construct( string $name )
+/* {{{ void psem___construct( string $name [, int $value [, int $mode ]] )
  */
 PHP_METHOD(PSEM,__construct)
 {
         zend_string *name;
         sem_t *semaphore;
         int oflag = O_CREAT;
-        mode_t mode = 0666;
-        int value = 1;
-	ZEND_PARSE_PARAMETERS_START(1, 1)
+        zend_long mode = 0666;
+        zend_long value = 1;
+	ZEND_PARSE_PARAMETERS_START(1, 3)
 		Z_PARAM_STR(name)
+                Z_PARAM_OPTIONAL
+                Z_PARAM_LONG(value)
+                Z_PARAM_LONG(mode)
 	ZEND_PARSE_PARAMETERS_END();
 
-        if((semaphore = sem_open(ZSTR_VAL(name), oflag, mode, (int)value)) == SEM_FAILED)
+        if((semaphore = sem_open(ZSTR_VAL(name), O_EXCL | O_CREAT, (mode_t)mode, (int)value)) == SEM_FAILED)
         {
+            if(errno == EEXIST)
+            {
 
-        zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+                if((semaphore = sem_open(ZSTR_VAL(name), O_CREAT)) == SEM_FAILED)
+                {
+                    zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+                }
+            }
+            else
+            {
+                zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+            }
 
         }
 
@@ -93,7 +106,7 @@ PHP_METHOD(PSEM,__construct)
 }
 /* }}} */
 
-/* {{{ void PSEM::wait([ int $timeout ] )
+/* {{{ bool PSEM::wait([ int $timeout ] )
  */
 PHP_METHOD(PSEM,wait)
 {
@@ -119,17 +132,7 @@ PHP_METHOD(PSEM,wait)
 
    retval = sem_timedwait(psemobj->semaphore,&ts);
 
-   }
-   else
-   {
-
-   retval = sem_wait(psemobj->semaphore);
-
-   }
-
-   if(retval == -1)
-   {
-        if((errno == ETIMEDOUT) || (errno == EAGAIN))
+        if(errno == ETIMEDOUT)
         {
             RETURN_FALSE;
         }
@@ -137,6 +140,18 @@ PHP_METHOD(PSEM,wait)
         {
             zend_throw_exception(zend_ce_exception, strerror(errno),  0);
         }
+
+   }
+   else
+   {
+
+   retval = sem_wait(psemobj->semaphore);
+
+       if(retval == -1)
+       {
+           zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+       }
+
    }
 
    RETURN_TRUE;
@@ -144,7 +159,7 @@ PHP_METHOD(PSEM,wait)
 }
 /* }}} */
 
-/* {{{ void PSEM::trywait( )
+/* {{{ bool PSEM::trywait( )
  */
 PHP_METHOD(PSEM,trywait)
 {
@@ -160,7 +175,7 @@ PHP_METHOD(PSEM,trywait)
 
    if(retval == -1)
    {
-        if((errno == ETIMEDOUT) || (errno == EAGAIN))
+        if(errno == EAGAIN)
         {
             RETURN_FALSE;
         }
@@ -175,7 +190,32 @@ PHP_METHOD(PSEM,trywait)
 }
 /* }}} */
 
-/* {{{  PSEM::post()
+/* {{{ int PSEM::getValue()
+ */
+
+PHP_METHOD(PSEM, getValue)
+{
+
+   ZEND_PARSE_PARAMETERS_NONE();
+
+   int sval;
+   int retval;
+   php_psem_obj *psemobj;
+
+   psemobj = Z_PHPPSEM_P(getThis());
+   retval = sem_getvalue(psemobj->semaphore,&sval);
+
+   if(retval == -1)
+   {
+       zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+   }
+
+   RETURN_LONG(sval);
+
+}
+/* }}} */
+
+/* {{{ bool  PSEM::post()
  */
 
 PHP_METHOD(PSEM, post)
@@ -200,6 +240,30 @@ PHP_METHOD(PSEM, post)
             zend_throw_exception(zend_ce_exception, strerror(errno),  0);
         }
 
+   }
+
+   RETURN_TRUE;
+
+}
+/* }}} */
+
+/* {{{  PSEM::close()
+ */
+
+PHP_METHOD(PSEM, close)
+{
+
+   ZEND_PARSE_PARAMETERS_NONE();
+
+   int retval;
+   php_psem_obj *psemobj;
+
+   psemobj = Z_PHPPSEM_P(getThis());
+   retval = sem_close(psemobj->semaphore);
+
+   if(retval == -1)
+   {
+       zend_throw_exception(zend_ce_exception, strerror(errno),  0);
    }
 
    RETURN_TRUE;
@@ -243,12 +307,10 @@ PHP_METHOD(PSEM,unlink)
 
      psemobj = Z_PHPPSEM_P(getThis());
 
-     sem_unlink(psemobj->name);
+     retval = sem_unlink(psemobj->name);
      if (retval == -1)
      {
-
         zend_throw_exception(zend_ce_exception, strerror(errno),  0);
-
      }
 
      RETURN_TRUE;
@@ -286,6 +348,8 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_construct, 0)
 	ZEND_ARG_INFO(0, name)
+	ZEND_ARG_INFO(0, value)
+	ZEND_ARG_INFO(0, mode)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_wait, 0)
@@ -298,6 +362,11 @@ ZEND_END_ARG_INFO()
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_post, 0)
 ZEND_END_ARG_INFO()
 
+ZEND_BEGIN_ARG_INFO(arginfo_psem_class_close, 0)
+ZEND_END_ARG_INFO()
+
+ZEND_BEGIN_ARG_INFO(arginfo_psem_class_getvalue, 0)
+ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_info, 0)
 ZEND_END_ARG_INFO()
@@ -321,8 +390,10 @@ static const zend_function_entry psem_methods[] = {
 	PHP_ME(PSEM, wait,         arginfo_psem_class_wait, ZEND_ACC_PUBLIC)
         PHP_ME(PSEM, trywait,      arginfo_psem_class_trywait, ZEND_ACC_PUBLIC)
         PHP_ME(PSEM, post,         arginfo_psem_class_post, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, info,      arginfo_psem_class_info, ZEND_ACC_PUBLIC)
-	PHP_ME(PSEM, unlink,    arginfo_psem_class_unlink, ZEND_ACC_PUBLIC)
+        PHP_ME(PSEM, close,        arginfo_psem_class_close, ZEND_ACC_PUBLIC)
+        PHP_ME(PSEM, info,         arginfo_psem_class_info, ZEND_ACC_PUBLIC)
+        PHP_ME(PSEM, getValue,     arginfo_psem_class_getvalue, ZEND_ACC_PUBLIC)
+	PHP_ME(PSEM, unlink,       arginfo_psem_class_unlink, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 /* }}} */
