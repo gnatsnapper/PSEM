@@ -72,37 +72,31 @@ PHP_FUNCTION(psem_info)
  */
 PHP_METHOD(PSEM,__construct)
 {
+
         zend_string *name;
+        zend_long flags = -1;
         sem_t *semaphore;
-        int oflag = O_CREAT;
-        zend_long mode = 0666;
+        zend_long mode = 0600;
         zend_long value = 1;
-	ZEND_PARSE_PARAMETERS_START(1, 3)
+	ZEND_PARSE_PARAMETERS_START(1, 4)
 		Z_PARAM_STR(name)
                 Z_PARAM_OPTIONAL
-                Z_PARAM_LONG(value)
+		Z_PARAM_LONG(flags)
                 Z_PARAM_LONG(mode)
+                Z_PARAM_LONG(value)
 	ZEND_PARSE_PARAMETERS_END();
 
-        if((semaphore = sem_open(ZSTR_VAL(name), O_EXCL | O_CREAT, (mode_t)mode, (int)value)) == SEM_FAILED)
+        if(flags == -1)
         {
-            if(errno == EEXIST)
-            {
-
-                if((semaphore = sem_open(ZSTR_VAL(name), O_CREAT)) == SEM_FAILED)
-                {
-                    zend_throw_exception(zend_ce_exception, strerror(errno),  0);
-                }
-            }
-            else
-            {
-                zend_throw_exception(zend_ce_exception, strerror(errno),  0);
-            }
-
+            semaphore = defaultSem(ZSTR_VAL(name));
+        }
+        else
+        {
+            semaphore = customSem(ZSTR_VAL(name), flags, mode, value);
         }
 
-
 	php_psem_initialize(Z_PHPPSEM_P(ZEND_THIS), ZSTR_VAL(name), semaphore);
+
 }
 /* }}} */
 
@@ -348,8 +342,9 @@ ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_construct, 0)
 	ZEND_ARG_INFO(0, name)
-	ZEND_ARG_INFO(0, value)
+	ZEND_ARG_INFO(0, flags)
 	ZEND_ARG_INFO(0, mode)
+	ZEND_ARG_INFO(0, value)
 ZEND_END_ARG_INFO()
 
 ZEND_BEGIN_ARG_INFO(arginfo_psem_class_wait, 0)
@@ -429,7 +424,7 @@ PHP_MINIT_FUNCTION(psem)
 
         INIT_CLASS_ENTRY(ce_psem, "PSEM", psem_methods);
 	ce_psem.create_object = psem_object_init;
-	psem_ce = zend_register_internal_class_ex(&ce_psem, NULL);
+	psem_ce = zend_register_internal_class(&ce_psem);
 	memcpy(&psem_object_handlers, &std_object_handlers, sizeof(zend_object_handlers));
 //	psem_object_handlers_psem.offset = XtOffsetOf(php_psem_obj, std);
 //	psem_object_handlers_psem.free_obj = psem_object_free_storage;
@@ -438,6 +433,9 @@ PHP_MINIT_FUNCTION(psem)
 //	psem_object_handlers_psem.compare_objects = psem_object_compare;
 //	psem_object_handlers_psem.get_properties_for = psem_object_get_properties_for;
 //	psem_object_handlers_psem.get_gc = psem_object_get_gc;
+        REGISTER_LONG_CONSTANT("PSEM_CREAT", O_CREAT, CONST_CS | CONST_PERSISTENT);
+        REGISTER_LONG_CONSTANT("PSEM_EXCL", O_EXCL, CONST_CS | CONST_PERSISTENT);
+
 
 	return SUCCESS;
 
@@ -469,4 +467,44 @@ PHPAPI int php_psem_initialize(php_psem_obj *psemobj, /*const*/ char *name, sem_
 	return 1;
 }
 /* }}} */
+
+
+sem_t * customSem(char *name, int flags, mode_t mode, int value)
+{
+
+    sem_t *semaphore;
+
+    if((semaphore = sem_open(name, flags, mode, value)) == SEM_FAILED)
+    {
+         zend_throw_exception(zend_ce_exception, strerror(errno), 0);
+    }
+
+    return semaphore;
+
+}
+
+sem_t * defaultSem(char *name)
+{
+
+    sem_t *semaphore;
+
+    if((semaphore = sem_open(name, O_EXCL | O_CREAT, 0600, 1)) == SEM_FAILED)
+    {
+        if(errno == EEXIST)
+        {
+
+            if((semaphore = sem_open(name, O_CREAT)) == SEM_FAILED)
+            {
+                zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+            }
+
+        }
+        else
+        {
+            zend_throw_exception(zend_ce_exception, strerror(errno),  0);
+        }
+
+    }
+
+}
 

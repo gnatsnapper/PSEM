@@ -41,6 +41,9 @@ static inline php_psem_obj *php_psem_obj_from_obj(zend_object *obj) {
 	return (php_psem_obj*)((char*)(obj) - XtOffsetOf(php_psem_obj, std));
 }
 
+sem_t * defaultSem(char *name);
+sem_t * customSem(char *name, int flags, mode_t mode, int value);
+
 #define Z_PHPPSEM_P(zv)  php_psem_obj_from_obj(Z_OBJ_P((zv)))
 
 #endif	/* PHP_PSEM_H */
