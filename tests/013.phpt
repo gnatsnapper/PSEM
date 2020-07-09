@@ -2,7 +2,7 @@
 Fork Test
 --SKIPIF--
 <?php
-if (!extension_loaded('pmq')) {
+if (!extension_loaded('psem')) {
 	echo 'skip';
 }
 if (!extension_loaded('pcntl')) {
@@ -13,7 +13,7 @@ if (!extension_loaded('pcntl')) {
 --FILE--
 <?php
 $name = '/'.bin2hex(random_bytes(8));
-$psem = new PSEM($name);
+$psem = new PosixSemaphore($name);
 
     $pid = pcntl_fork();
     if ($pid == -1) {

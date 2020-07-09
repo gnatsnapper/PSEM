@@ -27,7 +27,7 @@ static zend_object_handlers psem_object_handlers;
 
 /* {{{ string psem_info( string $name )
  */
-PHP_FUNCTION(psem_info)
+PHP_FUNCTION(posix_semaphore_info)
 {
 
     zend_string *name;
@@ -68,9 +68,9 @@ PHP_FUNCTION(psem_info)
 }
 /* }}}*/
 
-/* {{{ void psem___construct( string $name [, int $value [, int $mode ]] )
+/* {{{ void PosixSemaphore___construct( string $name [, int $value [, int $mode ]] )
  */
-PHP_METHOD(PSEM,__construct)
+PHP_METHOD(PosixSemaphore,__construct)
 {
 
         zend_string *name;
@@ -100,9 +100,9 @@ PHP_METHOD(PSEM,__construct)
 }
 /* }}} */
 
-/* {{{ bool PSEM::wait([ int $timeout ] )
+/* {{{ bool PosixSemaphore::wait([ int $timeout ] )
  */
-PHP_METHOD(PSEM,wait)
+PHP_METHOD(PosixSemaphore,wait)
 {
    int retval;
    zend_long semaphore;
@@ -153,9 +153,9 @@ PHP_METHOD(PSEM,wait)
 }
 /* }}} */
 
-/* {{{ bool PSEM::trywait( )
+/* {{{ bool PosixSemaphore::trywait( )
  */
-PHP_METHOD(PSEM,trywait)
+PHP_METHOD(PosixSemaphore,trywait)
 {
    ZEND_PARSE_PARAMETERS_NONE();
 
@@ -184,10 +184,10 @@ PHP_METHOD(PSEM,trywait)
 }
 /* }}} */
 
-/* {{{ int PSEM::getValue()
+/* {{{ int PosixSemaphore::getValue()
  */
 
-PHP_METHOD(PSEM, getValue)
+PHP_METHOD(PosixSemaphore, getValue)
 {
 
    ZEND_PARSE_PARAMETERS_NONE();
@@ -209,10 +209,10 @@ PHP_METHOD(PSEM, getValue)
 }
 /* }}} */
 
-/* {{{ bool  PSEM::post()
+/* {{{ bool  PosixSemaphore::post()
  */
 
-PHP_METHOD(PSEM, post)
+PHP_METHOD(PosixSemaphore, post)
 {
 
    ZEND_PARSE_PARAMETERS_NONE();
@@ -241,10 +241,10 @@ PHP_METHOD(PSEM, post)
 }
 /* }}} */
 
-/* {{{  PSEM::close()
+/* {{{  PosixSemaphore::close()
  */
 
-PHP_METHOD(PSEM, close)
+PHP_METHOD(PosixSemaphore, close)
 {
 
    ZEND_PARSE_PARAMETERS_NONE();
@@ -265,9 +265,9 @@ PHP_METHOD(PSEM, close)
 }
 /* }}} */
 
-/* {{{ array PSEM::info(  )
+/* {{{ array PosixSemaphore::info(  )
  */
-PHP_METHOD(PSEM,info)
+PHP_METHOD(PosixSemaphore,info)
 {
      php_psem_obj *psemobj;
      int retval,sval;
@@ -290,9 +290,9 @@ PHP_METHOD(PSEM,info)
 }
 /* }}}*/
 
-/* {{{ bool PSEM::unlink(  )
+/* {{{ bool PosixSemaphore::unlink(  )
  */
-PHP_METHOD(PSEM,unlink)
+PHP_METHOD(PosixSemaphore,unlink)
 {
      php_psem_obj *psemobj;
      int retval;
@@ -336,7 +336,7 @@ PHP_MINFO_FUNCTION(psem)
 
 /* {{{ arginfo
  */
-ZEND_BEGIN_ARG_INFO(arginfo_psem_info, 0)
+ZEND_BEGIN_ARG_INFO(arginfo_posix_semaphore_info, 0)
 	ZEND_ARG_INFO(0, name)
 ZEND_END_ARG_INFO()
 
@@ -373,7 +373,7 @@ ZEND_END_ARG_INFO()
 /* {{{ psem_functions[]
  */
 static const zend_function_entry psem_functions[] = {
-	PHP_FE(psem_info,		arginfo_psem_info)
+	PHP_FE(posix_semaphore_info,		arginfo_posix_semaphore_info)
 	PHP_FE_END
 };
 /* }}} */
@@ -381,14 +381,14 @@ static const zend_function_entry psem_functions[] = {
 /* {{{ psem_methods[]
  */
 static const zend_function_entry psem_methods[] = {
-	PHP_ME(PSEM, __construct,	arginfo_psem_class_construct, ZEND_ACC_PUBLIC)
-	PHP_ME(PSEM, wait,         arginfo_psem_class_wait, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, trywait,      arginfo_psem_class_trywait, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, post,         arginfo_psem_class_post, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, close,        arginfo_psem_class_close, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, info,         arginfo_psem_class_info, ZEND_ACC_PUBLIC)
-        PHP_ME(PSEM, getValue,     arginfo_psem_class_getvalue, ZEND_ACC_PUBLIC)
-	PHP_ME(PSEM, unlink,       arginfo_psem_class_unlink, ZEND_ACC_PUBLIC)
+	PHP_ME(PosixSemaphore, __construct,	arginfo_psem_class_construct, ZEND_ACC_PUBLIC)
+	PHP_ME(PosixSemaphore, wait,         arginfo_psem_class_wait, ZEND_ACC_PUBLIC)
+        PHP_ME(PosixSemaphore, trywait,      arginfo_psem_class_trywait, ZEND_ACC_PUBLIC)
+        PHP_ME(PosixSemaphore, post,         arginfo_psem_class_post, ZEND_ACC_PUBLIC)
+        PHP_ME(PosixSemaphore, close,        arginfo_psem_class_close, ZEND_ACC_PUBLIC)
+        PHP_ME(PosixSemaphore, info,         arginfo_psem_class_info, ZEND_ACC_PUBLIC)
+        PHP_ME(PosixSemaphore, getValue,     arginfo_psem_class_getvalue, ZEND_ACC_PUBLIC)
+	PHP_ME(PosixSemaphore, unlink,       arginfo_psem_class_unlink, ZEND_ACC_PUBLIC)
 	PHP_FE_END
 };
 /* }}} */
@@ -422,7 +422,7 @@ PHP_MINIT_FUNCTION(psem)
 {
         zend_class_entry ce_psem;
 
-        INIT_CLASS_ENTRY(ce_psem, "PSEM", psem_methods);
+        INIT_CLASS_ENTRY(ce_psem, "PosixSemaphore", psem_methods);
 	ce_psem.create_object = psem_object_init;
 	psem_ce = zend_register_internal_class(&ce_psem);
 	memcpy(&psem_object_handlers, &std_object_handlers, sizeof(zend_object_handlers));

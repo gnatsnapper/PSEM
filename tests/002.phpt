@@ -9,7 +9,7 @@ if (!extension_loaded('psem')) {
 --FILE--
 <?php
 $name = '/'.bin2hex(random_bytes(8));
-$psem = new PSEM($name);
+$psem = new PosixSemaphore($name);
 var_dump( $psem->close() );
 var_dump( $psem->unlink() );
 ?>

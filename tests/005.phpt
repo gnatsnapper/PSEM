@@ -9,9 +9,9 @@ if (!extension_loaded('psem')) {
 --FILE--
 <?php
 $name = '/'.bin2hex(random_bytes(8));
-$psem = new PSEM($name);
+$psem = new PosixSemaphore($name);
 try {
-$psem2 = new PSEM($name);
+$psem2 = new PosixSemaphore($name);
 } catch (Exception $e)
 {
     echo $e->getMessage();

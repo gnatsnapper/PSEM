@@ -8,18 +8,18 @@ extern zend_module_entry psem_module_entry;
 
 # define PHP_PSEM_VERSION "0.1.0"
 
-# if defined(ZTS) && defined(COMPILE_DL_PSEM)
+# if defined(ZTS) && defined(COMPILE_DL_PosixSemaphore)
 ZEND_TSRMLS_CACHE_EXTERN()
 # endif
 
-PHP_FUNCTION(psem_info);
-PHP_METHOD(PSEM, __construct);
-PHP_METHOD(PSEM, info);
-PHP_METHOD(PSEM, wait);
-PHP_METHOD(PSEM, trywait);
-PHP_METHOD(PSEM, post);
-PHP_METHOD(PSEM, close);
-PHP_METHOD(PSEM, unlink);
+PHP_FUNCTION(posix_semaphore_info);
+PHP_METHOD(PosixSemaphore, __construct);
+PHP_METHOD(PosixSemaphore, info);
+PHP_METHOD(PosixSemaphore, wait);
+PHP_METHOD(PosixSemaphore, trywait);
+PHP_METHOD(PosixSemaphore, post);
+PHP_METHOD(PosixSemaphore, close);
+PHP_METHOD(PosixSemaphore, unlink);
 
 PHP_RINIT_FUNCTION(psem);
 PHP_RSHUTDOWN_FUNCTION(psem);
