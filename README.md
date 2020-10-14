@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/gnatsnapper/PSEM.svg?branch=master)](https://travis-ci.org/gnatsnapper/PSEM)
+[![Build Status](https://travis-ci.org/gnatsnapper/PosixSemaphore.svg?branch=master)](https://travis-ci.org/gnatsnapper/PosixSemaphore)
 
 PSEM
 ======
